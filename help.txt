@@ -1,0 +1,3 @@
+Example of how to test out experimentXX
+
+(.venv) C:\...\VUTFIT_HPC> python -m experiments.exp01_exponential

@@ -1,2 +1,19 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# Enforce LF line endings for all text files
+* text eol=lf
+
+# Explicitly set UTF-8 encoding (safe cross-platform)
+*.py text working-tree-encoding=UTF-8
+*.md text working-tree-encoding=UTF-8
+*.txt text working-tree-encoding=UTF-8
+
+# Jupyter notebooks
+*.ipynb text working-tree-encoding=UTF-8
+
+# Keep images & binary files untouched
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary
+*.npy binary
+*.npz binary
