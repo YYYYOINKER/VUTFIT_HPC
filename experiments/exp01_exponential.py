@@ -31,7 +31,7 @@ def main():
     # Individual step sizes for each solver
     h_euler: float = 0.2;
     h_rk2: float = 0.5;
-    h_rk4: float = 0.8;
+    h_rk4: float = 0.7;
     h_taylor: float = 1.0;
 
     # Euler
@@ -71,12 +71,21 @@ def main():
     plt.grid();
     plt.legend();
     plt.title("Experiment 01: Exponential ODE y' = λy");
-    plt.show();
 
-    # TODO 
-    # Automatic export of result image to Experiments/Experiment01
-    # Automatic export of input and output data to -||-
-    #  
+    # Save input data and output data to a text file
+    with open('results/exp01/data.txt', 'a') as file:
+
+        file.write(f"Problem: y' = λ y ; y(0) = 1, λ = {lam}, \ntime span: <{t_span[0]};{t_span[1]}>\n")
+        file.write(f"{'Method':<15} | {'h':>8} | {'Final Error':>15}\n");
+        file.write("-" * 45 + "\n");
+        file.write(f"{'Euler':<15} | {h_euler:8.3f} | {err_eu:15.6e}\n");
+        file.write(f"{'RK2':<15} | {h_rk2:8.3f} | {err_rk2:15.6e}\n");
+        file.write(f"{'RK4':<15} | {h_rk4:8.3f} | {err_rk4:15.6e}\n");
+        file.write(f"{'Taylor n=10':<15} | {h_taylor:8.3f} | {err_ty:15.6e}\n\n");
+
+    plt.savefig('results/exp01/experiment01.png');
+
+    plt.show();
 
 if __name__ == "__main__":
     main();
