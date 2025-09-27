@@ -1,8 +1,8 @@
 #
 # WIP learning PyopenCL
 #
-import pyopencl as cl
-import numpy as np
+import pyopencl as cl;
+import numpy as np;
 
 # Create OpenCL Context
 # Choose a device
@@ -18,9 +18,32 @@ print("Input: ", a);
 
 # Kernel code
 kernel_code = """
+    // testing C stuff...
+    // no dynamic memory allowed
+    // no pointers
+    // structs are ok although data should be manippulated through python
+
+    #define is_positive(x) ((x) >= 0 ? 1 : 0)
+
+    typedef struct {
+            float value;
+            float derivative;
+        } node_t;
+
 __kernel void double_array(__global float* a) {
+
+    // get id
     int grid = get_global_id(0);
+
+    // double array
     a[grid] *= 2.0f;
+
+    // if elemnt in grid array is positive
+    if ( is_positive(a[grid]) ) {
+
+         // set to 1
+         a[grid] = 1.0f;
+    }
 }
 """
 
