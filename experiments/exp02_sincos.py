@@ -18,15 +18,15 @@ from src.systems.sin_cos import taylor_recursive_diff;
 def main():
 
     # Problem setup
-    omega: float = -1.0;
-    y0: float = 5.0;
-    z0: float = 100.0;
+    omega: float = 1.0;
+    y0: float = 0.0;
+    z0: float = 1.0;
     t_span: tuple[float, float] = (0.0, 20.0);
 
     # Step sizes
-    h_euler: float = 0.5;
-    h_rk4: float = 0.9;
-    h_taylor: float = 1.0;
+    h_euler: float = 0.1;
+    h_rk4: float = 0.2;
+    h_taylor: float = 0.3;
 
     # Euler
     t_eu, y_eu, z_eu = euler(sin_cos.f_y, sin_cos.f_z, t_span, y0, z0, h_euler, omega);
@@ -39,8 +39,8 @@ def main():
 
     # Exact solution at final time
     t_final = t_span[1];
-    y_exact_final = y0 * np.cos(omega * t_final) - z0 * np.sin(omega * t_final);
-    z_exact_final = y0 * np.sin(omega * t_final) + z0 * np.cos(omega * t_final);
+    y_exact_final = z0 * np.sin(omega * t_final);
+    z_exact_final = z0 * np.cos(omega * t_final);
 
     # Errors in y at final time
     err_eu = abs(y_eu[-1] - y_exact_final);
@@ -59,8 +59,8 @@ def main():
 
     # Euler
     plt.figure(figsize=(8, 5));
-    plt.plot(t_eu, y_eu, "o-", label=f"Euler (h={h_euler})");
-    plt.plot(t_eu, z_eu, "o-", label=f"Euler (h={h_euler})");
+    #plt.plot(t_eu, y_eu, "o-", label=f"Euler (h={h_euler})");
+    #plt.plot(t_eu, z_eu, "o-", label=f"Euler (h={h_euler})");
 
     # Runge-Kutta
     plt.plot(t_rk4, y_rk4, "^-", label=f"RK4 (h={h_rk4})");
@@ -72,8 +72,8 @@ def main():
 
     # Exact curve
     t_dense = np.linspace(*t_span, 500);
-    y_exact = y0 * np.cos(omega * t_dense) - z0 * np.sin(omega * t_dense);
-    z_exact = y0 * np.sin(omega * t_dense) + z0 * np.cos(omega * t_dense);
+    y_exact = z0 * np.sin(omega * t_dense);
+    z_exact = z0 * np.cos(omega * t_dense);
     
     # Exact solutions
     plt.plot(t_dense, y_exact, "k--", label="Exact solution y");

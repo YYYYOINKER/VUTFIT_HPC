@@ -8,20 +8,21 @@
 #
 
 import numpy as np;
+import math;
 
 # Function defining the ODE
 def f_y(t: float, y: float, z:float, omega: float
           ) -> float:
 
     # Right hand sides in: y' = -ω z ; y(0) = 0
-    return -omega * z;
+    return omega * z;
 
 
 def f_z(t: float, y:float, z: float, omega: float
         ) -> float:
     
     # Right hand sides in: z' = ω y  ; z(0) = 1
-    return omega * y;
+    return -omega * y;
 
 
 # Specialized Solvers for this system
@@ -100,43 +101,45 @@ def taylor_recursive_diff(
     order: int = 10
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
 
-    t_steps = int((t_span[1] - t_span[0]) / h)
-    t = np.zeros(t_steps + 1)
-    y = np.zeros(t_steps + 1)
-    z = np.zeros(t_steps + 1)
+    t_steps = int((t_span[1] - t_span[0]) / h);
+    t = np.zeros(t_steps + 1);
+    y = np.zeros(t_steps + 1);
+    z = np.zeros(t_steps + 1);
 
-    y[0], z[0] = y0, z0
-    t[0] = t_span[0]
+    y[0], z[0] = y0, z0;
+    t[0] = t_span[0];
 
     for i in range(t_steps):
+
         # Start with zeroth order (just the current values)
-        y_next = y[i]
-        z_next = z[i]
+        dy: np.ndarray = np.zeros(order+1);
+        dz: np.ndarray = np.zeros(order+1);
+    
+        dy[0] = y[i];
+        dz[0] = z[i];
+    
+        # First derivative
+        dy[1] = omega * z[i];
+        dz[1] = -omega * y[i];
+    
+        # Hiher derivatives z^(n+2)=−ω^2 * z^(n).
+        for j in range(2, order+1):
 
-        # First derivatives
-        dy = -omega * z[i]
-        dz =  omega * y[i]
+            dy[j] = -omega**2 * dy[j-2];
+            dz[j] = -omega**2 * dz[j-2];
+    
+        # Build T Sum
+        y_next = 0.0;
+        z_next = 0.0;
+        for j in range(order+1):
+            y_next += (h**j / math.factorial(j)) * dy[j];
+            z_next += (h**j / math.factorial(j)) * dz[j];
+    
+        y[i+1] = y_next;
+        z[i+1] = z_next;
+        t[i+1] = t[i] + h;
 
-        # First order term
-        y_next += h * dy
-        z_next += h * dz
-
-        # Higher orders
-        for j in range(2, order + 1):
-            # Compute j-th derivatives from previous ones
-            ddy = -omega * dz
-            ddz =  omega * dy
-            dy, dz = ddy, ddz
-
-            # Add contribution with division by j
-            y_next += (h / j) * dy
-            z_next += (h / j) * dz
-
-        # Update arrays
-        y[i+1], z[i+1] = y_next, z_next
-        t[i+1] = t[i] + h
-
-    return t, y, z
+    return t, y, z;
 
 
 # End of file
