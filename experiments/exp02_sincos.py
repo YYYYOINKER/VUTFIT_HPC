@@ -26,7 +26,7 @@ def main():
     # Step sizes
     h_euler: float = 0.1;
     h_rk4: float = 0.2;
-    h_taylor: float = 0.3;
+    h_taylor: float = 0.1;
 
     # Euler
     t_eu, y_eu, z_eu = euler(sin_cos.f_y, sin_cos.f_z, t_span, y0, z0, h_euler, omega);
