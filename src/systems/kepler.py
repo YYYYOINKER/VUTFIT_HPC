@@ -2,7 +2,7 @@
 #   System for experiment 3
 #   Author: Pavol Mihalik, VUT FIT
 #
-#   The kepler problem (n body, n=2)
+#   The kepler problem (n body, n=2, 1 stationary)
 #   Hamiltonian formalisation
 #   
 #   H = T + V
@@ -166,22 +166,27 @@ def action(t: np.ndarray, z: np.ndarray, mu: float):
     return S;
 
 
-def cumulative_action(t, z, mu):
+def cumulative_action(t: np.ndarray, z: np.ndarray, mu: float):
 
-    h = t[1] - t[0]
-    S = np.zeros(len(t))
+    # Setup
+    h = t[1] - t[0];
+    S = np.zeros(len(t));
 
+    # Main loop
     for i in range(1, len(t)):
 
-        x, y, px, py = z[i-1]
-        x_next, y_next, *_ = z[i]
+        # Prepare 
+        x, y, px, py = z[i-1];
+        x_next, y_next, *_ = z[i];
 
-        dx = x_next - x
-        dy = y_next - y
+        # Get difference
+        dx = x_next - x;
+        dy = y_next - y;
 
-        H_i = H(z[i-1], mu)
-        S[i] = S[i-1] + (px * dx + py * dy - H_i * h)
+        # Calculate Energy for Action
+        H_i = H(z[i-1], mu);
+        S[i] = S[i-1] + (px * dx + py * dy - H_i * h);
 
-    return S
+    return S;
 
 # End of file

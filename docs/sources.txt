@@ -1,0 +1,38 @@
+
+Symplectic methods:
+
+Symplectic euler
+https://math.libretexts.org/Bookshelves/Differential_Equations/Numerically_Solving_Ordinary_Differential_Equations_(Brorson)/01%3A_Chapters/1.07%3A_Symplectic_integrators
+
+Verlet Integrator
+https://www.algorithm-archive.org/contents/verlet_integration/verlet_integration.html
+
+Yoshida method on Taylor series?
+https://www.osti.gov/servlets/purl/1000956
+
+Yoshida orbits
+https://stackoverflow.com/questions/72467490/orbit-spirals-using-4th-order-yoshida-integration
+
+-----------------------------------------------------------------------------------------------------------
+Automatic differentioation 
+
+Automatic differentiation
+https://jax.quantecon.org/autodiff.html
+
+Short
+https://comp6248.ecs.soton.ac.uk/handouts/autograd-handouts.pdf
+
+Automatic differentiation Library(JAX)
+https://docs.jax.dev/en/latest/automatic-differentiation.html
+
+-----------------------------------------------------------------------------------------------------------
+
+N body problem
+
+https://www.academia.edu/117160310/Introduction_to_Hamiltonian_Dynamical_Systems_and_the_N_Body_Problem
+
+
+Others
+
+https://www.youtube.com/watch?v=9CBS5CAynBE&list=PLDcSwjT2BF_WDki-WvmJ__Q0nLIHuNPbP&index=7
+

@@ -13,7 +13,7 @@ from src.systems import sin_cos;
 from src.systems.sin_cos import euler;
 from src.systems.sin_cos import rk4;
 from src.systems.sin_cos import taylor_recursive_diff;
-
+# TODO matarix calcualtions
 
 def main():
 
@@ -24,9 +24,9 @@ def main():
     t_span: tuple[float, float] = (0.0, 20.0);
 
     # Step sizes
-    h_euler: float = 0.1;
-    h_rk4: float = 0.2;
-    h_taylor: float = 0.1;
+    h_euler: float = 0.01;
+    h_rk4: float = 0.5;
+    h_taylor: float = 0.8;
 
     # Euler
     t_eu, y_eu, z_eu = euler(sin_cos.f_y, sin_cos.f_z, t_span, y0, z0, h_euler, omega);
@@ -59,8 +59,8 @@ def main():
 
     # Euler
     plt.figure(figsize=(8, 5));
-    #plt.plot(t_eu, y_eu, "o-", label=f"Euler (h={h_euler})");
-    #plt.plot(t_eu, z_eu, "o-", label=f"Euler (h={h_euler})");
+    plt.plot(t_eu, y_eu, "o-", label=f"Euler (h={h_euler})");
+    plt.plot(t_eu, z_eu, "o-", label=f"Euler (h={h_euler})");
 
     # Runge-Kutta
     plt.plot(t_rk4, y_rk4, "^-", label=f"RK4 (h={h_rk4})");
