@@ -152,24 +152,24 @@ def main():
     err_ty  = err_ty_t[-1];
     err_ty_m= err_tym_t[-1];
 
-    names = ["Euler", "RK2 (Heun)", "RK4", "Taylor-10"]
-    t_lte, L = lte_over_time(t_span=(0.0, 10.0), h=0.1, omega=1.0, order=10)
+    names = ["Euler", "RK2 (Heun)", "RK4", "Taylor-10"];
+    t_lte, L = lte_over_time(t_span=(0.0, 10.0), h=0.1, omega=1.0, order=10);
 
     # --- local error vs time
     plt.figure(figsize=(8,5))
     for k in range(L.shape[0]):
-        plt.semilogy(t_lte, L[k], marker='o', label=f"{names[k]} (h=0.1)")
+        plt.loglog(t_lte, L[k], marker='o', label=f"{names[k]} (h=0.1)")
     plt.xlabel("t (step start)")
     plt.ylabel(r"one-step LTE  $\|Y_{\rm num}(t\!\to\!t{+}h)-Y(t{+}h)\|_2$")
     plt.title("Local truncation error vs time (sine–cosine system)")
     plt.grid(True, which="both"); plt.legend(); plt.tight_layout(); plt.show()
 
     # --- Global error vs time
-    plt.figure(figsize=(8,5))
-    plt.semilogy(t_eu,  err_eu_t,  'o-', ms=3, label=f'Euler (h={h_euler})');
-    plt.semilogy(t_rk4, err_rk4_t, '^-', ms=4, label=f'RK4 (h={h_rk4})');
-    plt.semilogy(t_ty,  err_ty_t,  'd-', ms=4, label=f'Taylor-10 (h={h_taylor})');
-    plt.semilogy(t_ty_m,err_tym_t, 's-', ms=4, label=f'Matrix Taylor-10 (h={h_taylor})');
+    plt.figure(figsize=(8,5));
+    plt.loglog(t_eu,  err_eu_t,  'o-', ms=3, label=f'Euler (h={h_euler})');
+    plt.loglog(t_rk4, err_rk4_t, '^-', ms=4, label=f'RK4 (h={h_rk4})');
+    plt.loglog(t_ty,  err_ty_t,  'd-', ms=4, label=f'Taylor-10 (h={h_taylor})');
+    plt.loglog(t_ty_m,err_tym_t, 's-', ms=4, label=f'Matrix Taylor-10 (h={h_taylor})');
     plt.xlabel('t'); plt.ylabel(r'global error  $\|[y,z]_{\rm num}-[y,z]_{\rm exact}\|_2$');
     plt.title('Global error vs time'); plt.grid(True, which='both'); plt.legend();
     plt.tight_layout(); plt.show();

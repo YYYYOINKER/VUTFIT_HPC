@@ -97,10 +97,10 @@ def lte_over_time(t_span, h, omega, order=10, norm=np.linalg.norm):
         Yr4 = step_rk4(ti,          Y_i, h, omega);
         YTm = step_taylor_vec(ti,   Y_i, h, omega, order=order);
 
-        lte_E[i]  = norm(Ye  - Y_ip1, 2);
-        lte_R2[i] = norm(Yr2 - Y_ip1, 2);
-        lte_R4[i] = norm(Yr4 - Y_ip1, 2);
-        lte_Tm[i] = norm(YTm - Y_ip1, 2);
+        lte_E[i]  = (Ye  - Y_ip1);
+        lte_R2[i] = (Yr2 - Y_ip1);
+        lte_R4[i] = (Yr4 - Y_ip1);
+        lte_Tm[i] = (YTm - Y_ip1);
 
     L = np.stack([lte_E, lte_R2, lte_R4, lte_Tm], axis=0);
     return t, L;
