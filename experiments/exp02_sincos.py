@@ -20,7 +20,8 @@ from src.systems.sin_cos import euler;
 from src.systems.sin_cos import rk4;
 from src.systems.sin_cos import taylor_recursive_diff;
 from src.systems.sin_cos import taylor_recursive_diff_matrix;
-from src.systems.sin_cos import taylor_recursive_diff_matrix_jit, lte_over_time;
+from src.systems.sin_cos import taylor_recursive_diff_matrix_jit #lte_over_time;
+from src.systems.sin_cos import taylor_recursive_diff_autoadjust_vec;
 
 # TODO matarix calcualtions
 
@@ -31,12 +32,12 @@ def main():
     omega: float = 1.0;
     y0: float = 0.0;
     z0: float = 1.0;
-    t_span: tuple[float, float] = (0.0, 50.0);
+    t_span: tuple[float, float] = (0.0, 5.0);
 
     # Step sizes
-    h_euler: float = 0.01;
-    h_rk4: float = 0.5;
-    h_taylor: float = 0.1;
+    h_euler: float = 0.2;
+    h_rk4: float = 0.2;
+    h_taylor: float = 0.2;
 
     # Euler
     t_eu, y_eu, z_eu = euler(sin_cos.f_y, sin_cos.f_z, t_span, y0, z0, h_euler, omega);
@@ -67,6 +68,14 @@ def main():
     end_t_matrix_jit = time.time();
     matrix_taylor_duration_jit = end_t_matrix_jit -start_t_matrix_jit;
 
+    # Taylor order
+    t, y, z, orders = taylor_recursive_diff_autoadjust_vec(
+    t_span, y0=0.0, z0=1.0,
+    h=h_taylor, omega=omega,
+    max_order=20,
+    accuracy=1e-15,
+    )
+
     # Exact solution at final time
     t_final = t_span[1];
     y_exact_final = -z0 * np.sin(omega * t_final);
@@ -86,7 +95,6 @@ def main():
     print(f"{'RK4':<15} | {h_rk4:8.3f} | {err_rk4:15.6e}");
     print(f"{'Taylor n=10':<15} | {h_taylor:8.3f} | {err_ty:15.6e}");
     print(f'Duration: Matrix:{matrix_taylor_duration} vs Classic:{taylor_duration} vs JIT:{matrix_taylor_duration_jit}');
-
     # Plot solutions
 
     # Euler
@@ -110,6 +118,34 @@ def main():
     t_dense = np.linspace(*t_span, 500);
     y_exact = -z0 * np.sin(omega * t_dense);
     z_exact = z0 * np.cos(omega * t_dense);
+
+    # LTE calculations
+    y_exact_eu = -z0 * np.sin(omega * t_eu);
+    z_exact_eu = y0 * np.cos(omega * t_eu);
+
+    y_exact_rk4 = -z0 * np.sin(omega * t_rk4);
+    z_exact_rk4 = y0 * np.cos(omega * t_rk4);
+
+    y_exact_tay = -z0 * np.sin(omega * t_ty);
+    z_exact_tay = y0 * np.cos(omega*t_ty);
+
+    y_exact_tay_m = -z0 * np.sin(omega*t_ty_m);
+    z_exact_tay_m = y0 * np.cos(omega*t_ty_m);
+
+    # local Errrors
+
+   # component-wise absolute errors
+    error_eu_y = np.abs(y_eu  - y_exact_eu);
+    error_eu_z = np.abs(z_eu  - z_exact_eu);
+
+    error_rk4_y = np.abs(y_rk4 - y_exact_rk4);
+    error_rk4_z = np.abs(z_rk4 - z_exact_rk4);
+
+    error_tay_y = np.abs(y_ty  - y_exact_tay);
+    error_tay_z = np.abs(z_ty  - z_exact_tay);
+
+    error_tay_m_y = np.abs(y_ty_m - y_exact_tay_m);
+    error_tay_m_z = np.abs(z_ty_m - z_exact_tay_m);
     
     # Exact solutions
     plt.plot(t_dense, y_exact, "k--", label="Exact solution y");
@@ -120,7 +156,7 @@ def main():
     plt.ylabel("y(t), z(t)");
     plt.grid();
     plt.legend();
-    plt.title("Experiment 01: Harmonic oscillator system");
+    plt.title("Experiment 02: Harmonic oscillator system");
 
     # Save input data and output data to a text file
     with open('results/exp02/data.txt', 'a') as file:
@@ -152,27 +188,38 @@ def main():
     err_ty  = err_ty_t[-1];
     err_ty_m= err_tym_t[-1];
 
-    names = ["Euler", "RK2 (Heun)", "RK4", "Taylor-10"];
-    t_lte, L = lte_over_time(t_span=(0.0, 10.0), h=0.1, omega=1.0, order=10);
+    # --- Local error vs time
+    plt.figure(figsize=(8,5));
+    plt.loglog(t_eu,  error_eu_y,   label=f'Euler |y - y_exact| (h={h_euler})');
+    plt.loglog(t_rk4, error_rk4_y,  label=f'RK4  |y - y_exact| (h={h_rk4})');
+    plt.loglog(t_ty, error_tay_y,  label=f'Taylor  |y - y_exact| (h={h_rk4})');
+    #plt.loglog(t_ty_m, error_tay_m_y,  label=f'Matrix Taylor  |y - y_exact| (h={h_rk4})')
 
-    # --- local error vs time
-    plt.figure(figsize=(8,5))
-    for k in range(L.shape[0]):
-        plt.loglog(t_lte, L[k], marker='o', label=f"{names[k]} (h=0.1)")
-    plt.xlabel("t (step start)")
-    plt.ylabel(r"one-step LTE  $\|Y_{\rm num}(t\!\to\!t{+}h)-Y(t{+}h)\|_2$")
-    plt.title("Local truncation error vs time (sine–cosine system)")
-    plt.grid(True, which="both"); plt.legend(); plt.tight_layout(); plt.show()
+    plt.xlabel("t");
+    plt.ylabel("component-wise error in y");
+    plt.title("Error in y vs time");
+    plt.grid(True, which="both");
+    plt.legend();
+    plt.tight_layout();
+    plt.show();
 
     # --- Global error vs time
     plt.figure(figsize=(8,5));
     plt.loglog(t_eu,  err_eu_t,  'o-', ms=3, label=f'Euler (h={h_euler})');
     plt.loglog(t_rk4, err_rk4_t, '^-', ms=4, label=f'RK4 (h={h_rk4})');
     plt.loglog(t_ty,  err_ty_t,  'd-', ms=4, label=f'Taylor-10 (h={h_taylor})');
-    plt.loglog(t_ty_m,err_tym_t, 's-', ms=4, label=f'Matrix Taylor-10 (h={h_taylor})');
+    #plt.loglog(t_ty_m,err_tym_t, 's-', ms=4, label=f'Matrix Taylor-10 (h={h_taylor})');
     plt.xlabel('t'); plt.ylabel(r'global error  $\|[y,z]_{\rm num}-[y,z]_{\rm exact}\|_2$');
     plt.title('Global error vs time'); plt.grid(True, which='both'); plt.legend();
     plt.tight_layout(); plt.show();
+
+    # Order plot
+    plt.step(t[:-1], orders[:-1]);
+    plt.xlabel("t");
+    plt.ylabel("Taylor order");
+    plt.title("Adpative taylor order");
+    plt.grid(True);
+    plt.show();
 
 
 if __name__ == "__main__":

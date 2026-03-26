@@ -24,7 +24,7 @@ from scipy.integrate import solve_ivp;
 def main():
 
     # Problem setup
-    lam: float = 1.1;
+    lam: float = -1.1;
     y0: float = 3.2;
     t_span: tuple[float, float] = (0.0, 5.0);
 
@@ -34,10 +34,10 @@ def main():
     exact_final: float = exponential.exact_solution(t_span[1], y0, lam);
 
     # Individual step sizes for each solver
-    h_euler: float = 0.01;
-    h_rk2: float = 0.02;
-    h_rk4: float = 0.04;
-    h_taylor: float = 0.1;
+    h_euler: float = 1;
+    h_rk2: float = 1;
+    h_rk4: float = 1;
+    h_taylor: float = 1;
 
 
     # Euler
@@ -63,6 +63,11 @@ def main():
     t_ty, y_ty = exponential.taylor_recursive_diff(t_span, y0, h_taylor, lam, order=10);
     err_ty = abs(y_ty[-1] - exact_final);
     time_taylor_final = time.perf_counter() - time_taylor; 
+
+    # Taylor - adaptive order
+    time_taylor_adaptive = time.perf_counter();
+    t_ty_a, y_ty_a, adaptive_ord = exponential.taylor_recursive_diff_autoadjust(t_span, y0, h_taylor, lam, max_order=20, accuracy=1e-12);
+    time_taylor_final = time.perf_counter() - time_taylor_adaptive;
 
     # --- SciPy solve_ivp (adaptive RK45) -----------------------------------------
     def rhs(t, y):  # matches your f(t, y, lam)
@@ -144,10 +149,10 @@ def main():
 
     # --- plot LTE(t_i, h) vs t_i ---
     plt.figure(figsize=(8,5));
-    plt.plot(t_starts, ltes[0], 'o-', label=f"Euler   (h={h})");
-    plt.plot(t_starts, ltes[1], 's-', label=f"RK2     (h={h})");
-    plt.plot(t_starts, ltes[2], '^-', label=f"RK4     (h={h})");
-    plt.plot(t_starts, ltes[3], 'p-', label=f"Taylor(ord=10)    (h={h})");
+    plt.loglog(t_starts, ltes[0], 'o-', label=f"Euler   (h={h})");
+    plt.loglog(t_starts, ltes[1], 's-', label=f"RK2     (h={h})");
+    plt.loglog(t_starts, ltes[2], '^-', label=f"RK4     (h={h})");
+    plt.loglog(t_starts, ltes[3], 'p-', label=f"Taylor(ord=10)    (h={h})");
     plt.xlabel("t (step start)");
     plt.ylabel("one-step LTE = |y_num(t→t+h) - y_exact(t+h)|");
     plt.title("Local truncation error along the interval");
@@ -158,13 +163,21 @@ def main():
     method_names = ["Euler", "RK2 (Heun)", "RK4", "Taylor-10"];
     plt.figure(figsize=(8,5));
     for m in range(gerr.shape[0]):
-        plt.plot(t_gerr, gerr_rel[m], marker=".", label=f"{method_names[m]} (h={h})");
+        plt.loglog(t_gerr, gerr_rel[m], marker=".", label=f"{method_names[m]} (h={h})");
     plt.xlabel("t");
     plt.ylabel(r"global error  $|y_h(t_n)-y(t_n)|$");
     plt.title("Global error vs. time");
     plt.grid(True, which="both");
     plt.legend();
     plt.tight_layout();
+    plt.show();
+
+    plt.figure();
+    plt.plot(t_ty_a[:-1], adaptive_ord[:-1]);
+    plt.xlabel("t");
+    plt.ylabel("Taylor order");
+    plt.title("Adpative taylor order");
+    plt.grid(True);
     plt.show();
 
 if __name__ == "__main__":

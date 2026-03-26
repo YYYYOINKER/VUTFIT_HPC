@@ -41,15 +41,15 @@ def step_euler(t, Y, h, omega):
     return Y + h * f_vec(t, Y, omega);
 
 def step_rk2_heun(t, Y, h, omega):
-    k1 = f_vec(t,     Y,           omega);
-    k2 = f_vec(t + h, Y + h*k1,    omega);
+    k1 = f_vec(t, Y, omega);
+    k2 = f_vec(t + h, Y + h*k1, omega);
     return Y + 0.5*h*(k1 + k2);
 
 def step_rk4(t, Y, h, omega):
-    k1 = f_vec(t,           Y,               omega);
-    k2 = f_vec(t+0.5*h,     Y+0.5*h*k1,      omega);
-    k3 = f_vec(t+0.5*h,     Y+0.5*h*k2,      omega);
-    k4 = f_vec(t+h,         Y+h*k3,          omega);
+    k1 = f_vec(t, Y, omega);
+    k2 = f_vec(t+0.5*h, Y+0.5*h*k1, omega);
+    k3 = f_vec(t+0.5*h, Y+0.5*h*k2, omega);
+    k4 = f_vec(t+h, Y+h*k3, omega);
     return Y + (h/6.0)*(k1 + 2*k2 + 2*k3 + k4);
 
 def step_taylor_vec(t, Y, h, omega, order=10):
@@ -64,7 +64,7 @@ def step_taylor_vec(t, Y, h, omega, order=10):
     c = 1.0;
     for n in range(1, order+1):
         c *= h / n;  # h^n/n!
-        # update A_power = A_power @ A (specialized)
+        # update A_power = A_power @ A
         np11 =  p12 * omega;
         np12 = -p11 * omega;
         np21 =  p22 * omega;
@@ -76,35 +76,35 @@ def step_taylor_vec(t, Y, h, omega, order=10):
         z_next += c * az;
     return np.array([y_next, z_next], dtype=float);
 
-
+'''
 # Local eror over time
-def lte_over_time(t_span, h, omega, order=10, norm=np.linalg.norm):
-    t0, t1 = t_span;
-    N = int((t1 - t0)/h);
-    t = t0 + np.arange(N)*h;  # step starts
+def lte_over_time(t_span, t, euler, rk2, rk4, taylor):
 
-    lte_E  = np.zeros(N);
-    lte_R2 = np.zeros(N);
-    lte_R4 = np.zeros(N);
-    lte_Tm = np.zeros(N);
+    lte_E  = np.zeros((N,2));
+    lte_R2 = np.zeros((N,2));
+    lte_R4 = np.zeros((N,2));
+    lte_Tm = np.zeros((N,2));
+    exact  = np.zeros((N,2));
 
     for i, ti in enumerate(t):
-        Y_i   = exact_vec(ti,   omega)[:,0];      # exact at step start
-        Y_ip1 = exact_vec(ti+h, omega)[:,0];      # exact at step end
+        Y_i   = exact_vec(ti, omega)[:,0]; # exact at step start
+        Y_ip1 = exact_vec(ti+h, omega)[:,0]; # exact at step end
 
-        Ye  = step_euler(ti,        Y_i, h, omega);
-        Yr2 = step_rk2_heun(ti,     Y_i, h, omega);
-        Yr4 = step_rk4(ti,          Y_i, h, omega);
-        YTm = step_taylor_vec(ti,   Y_i, h, omega, order=order);
+        Ye  = step_euler(ti, Y_i, h, omega);
+        Yr2 = step_rk2_heun(ti, Y_i, h, omega);
+        Yr4 = step_rk4(ti, Y_i, h, omega);
+        YTm = step_taylor_vec(ti, Y_i, h, omega, order=order);
 
-        lte_E[i]  = (Ye  - Y_ip1);
-        lte_R2[i] = (Yr2 - Y_ip1);
-        lte_R4[i] = (Yr4 - Y_ip1);
-        lte_Tm[i] = (YTm - Y_ip1);
+        lte_E[i, :]  = abs(Ye-Y_ip1);
+        lte_R2[i, :] = abs(Yr2-Y_ip1);
+        lte_R4[i, :] = abs(Yr4-Y_ip1);
+        lte_Tm[i, :] = abs(YTm-Y_ip1);
+        #exact[i, :] = Y_ip1;
+
 
     L = np.stack([lte_E, lte_R2, lte_R4, lte_Tm], axis=0);
     return t, L;
-
+'''
 
 def global_error_over_time(t_span, h, omega, y0=0.0, z0=1.0, norm=np.linalg.norm):
 
@@ -388,5 +388,69 @@ def taylor_recursive_diff_matrix_jit(t0, t1, y0, z0, h, omega, order):
         z[i+1] = zi
 
     return t, y, z
+
+
+def taylor_recursive_diff_autoadjust_vec(
+    t_span: tuple[float, float],
+    y0: float,
+    z0: float,
+    h: float,
+    omega: float = 1.0,
+    max_order: int = 10,
+    accuracy: float = 1e-6,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+
+    t0, t1 = t_span
+    t_steps: int = int((t1 - t0) / h)
+
+    t = np.zeros(t_steps + 1, dtype=float)
+    y = np.zeros(t_steps + 1, dtype=float)
+    z = np.zeros(t_steps + 1, dtype=float)
+    o = np.zeros(t_steps + 1, dtype=int)
+
+    y[0] = y0
+    z[0] = z0
+    t[0] = t0
+
+    for i in range(t_steps):
+
+        y_next = y[i]
+        z_next = z[i]
+
+        dy = -omega * z[i]   # y'  = -ω z
+        dz =  omega * y[i]   # z'  =  ω y
+
+        c = h
+
+        order = 0
+
+        while True:
+            order += 1
+
+            term_y = c * dy
+            term_z = c * dz
+
+            y_next += term_y
+            z_next += term_z
+
+            # Norm of vectors
+            # sqrt(term_y**2 + term_z**2)
+            term_norm = math.hypot(term_y, term_z)
+
+            if term_norm < accuracy:
+                o[i] = order
+                break
+
+            # Update
+            dy, dz = -omega * dz, omega * dy
+
+            # update koeficientu c_{n+1} = c_n * h/(n+1)
+            c *= h / (order + 1)
+
+        y[i+1] = y_next
+        z[i+1] = z_next
+        t[i+1] = t[i] + h
+
+    return t, y, z, o
 
 # End of file

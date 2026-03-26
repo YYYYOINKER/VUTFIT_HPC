@@ -193,4 +193,48 @@ def taylor_recursive_diff(t_span: tuple[float, float],
     
     return t, y;
 
+
+
+def taylor_recursive_diff_autoadjust(t_span: tuple[float, float], 
+                          y0: float, 
+                          h: float, 
+                          lam: float = 1.0, 
+                          max_order: int = 10,
+                          accuracy: float = 1e-6
+                          ) -> tuple[np.ndarray, np.ndarray]:
+
+    # Setup
+    t_steps:int = int( (t_span[1] - t_span[0]) / h );
+    t:np.ndarray = np.zeros(t_steps + 1);
+    y:np.ndarray = np.zeros(t_steps + 1);
+    o:np.ndarray = np.zeros(t_steps + 1); # Adaptive order
+    y[0] = y0;
+    t[0] = t_span[0];
+
+    # Taylor steps
+    for i in range(t_steps):
+
+        term = y[i];
+        y_next = term;
+        j = 0;
+        order = 0;
+
+        # Taylor expansion up to desired order (ord)
+        while True:
+            j += 1;
+            term = term * h * lam / j;
+            y_next += term;
+            order += 1;
+        
+            # Determine order by accuracy order
+            if abs(term) < accuracy:
+                o[i] = order;
+                break;
+        
+        # Update arrays
+        y[i+1] = y_next;
+        t[i+1] = t[i]+h;
+    
+    return t, y, o;
+
 # End of file
